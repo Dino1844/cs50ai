@@ -91,22 +91,28 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
+    # using DFS can support the shortestPath
     if (source == target):
         return []
     queue = QueueFrontier()
+    # queue save all the ways that traverse
     queue.add(([], source))
     visited = set()
-
+    # if queue is not empty, pop sth. out
     while queue.empty() is False:
         path, now = queue.remove()
+        # if already visited, pass it
         if (now in visited):
             continue
         visited.add(now)
         for movie, person in neighbors_for_person(now):
             if (person == target):
                 return path + [(movie, person)]
-            queue.add((path + [(movie,person)], person))
+            # if not correct, add the path to queue
+            queue.add((path + [(movie, person)], person))
+    # no road success, return None
     return None
+
 
 def person_id_for_name(name):
     """
