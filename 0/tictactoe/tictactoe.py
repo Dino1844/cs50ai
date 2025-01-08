@@ -119,20 +119,24 @@ def minimax(board):
     if terminal(board):
         return None
 
-    def minFunc(board):
+    def minFunc(board, pivot):
         if terminal(board):
             return utility(board)
         v = float('inf')
         for action in actions(board):
-            v = min(v, maxFunc(result(board, action)))
+            if v < pivot:
+                break
+            v = min(v, maxFunc(result(board, action),v))
         return v
 
-    def maxFunc(board):
+    def maxFunc(board, pivot):
         if terminal(board):
             return utility(board)
         v = float('-inf')
         for action in actions(board):
-            v = max(v, minFunc(result(board, action)))
+            if v > pivot:
+                break 
+            v = max(v, minFunc(result(board, action), v))
         return v
 
     # Determine the optimal action for the current player
@@ -142,14 +146,14 @@ def minimax(board):
     if current_player == "X":  # Maximizing player
         now = float('-inf')
         for action in actions(board):
-            action_value = minFunc(result(board, action))
+            action_value = minFunc(result(board, action), now)
             if action_value > now:
                 now = action_value
                 best_action = action
     else:  # Minimizing player
         now = float('inf')
         for action in actions(board):
-            action_value = maxFunc(result(board, action))
+            action_value = maxFunc(result(board, action), now)
             if action_value < now:
                 now = action_value
                 best_action = action
