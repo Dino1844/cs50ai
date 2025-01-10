@@ -192,7 +192,9 @@ class MinesweeperAI():
         """
         # add move and update the cell
         self.moves_made.add(cell)
+        
         self.mark_safe(cell)
+        self.safes.add(cell)
         
         # create a young sentence
         (i, j) = cell
@@ -213,28 +215,50 @@ class MinesweeperAI():
         safes = sen.known_safes()
         
         # add the admitted in self and this sentence
-        for mine in mines.copy():
+        for mine in mines:
             self.mines.add(mine)
-        for safe in safes.copy():
+        for safe in safes:
             self.safes.add(safe)
             
             
         # ignores known safes when adding new sentence
         for mine in self.mines:
             sen.mark_mine(mine)
+            self.mark_mine(mine)
         for safe in self.safes:
             sen.mark_safe(safe)
+            self.mark_safe(safe)
         self.knowledge.append(sen)
-        
-        # update other sentence
-        for sentence in self.knowledge:
-            for mine in mines:
-                sentence.mark_mine(mine)
-            for safe in safes:
-                sentence.mark_safe(safe)
+
+        for w in self.knowledge:
+            cell_tmp = w.cells
+            count_tmp = w.count
+            if len(cell_tmp) == count_tmp:
+                for cell in cell_tmp.copy():
+                    self.mark_mine(cell)
+            elif count_tmp == 0 and len(cell_tmp)>0:
+                for cell in cell_tmp.copy():
+                    self.mark_safe(cell)
                 
         # add new senten inferred from base
-        # TODO
+        for a in self.knowledge:
+            for b in self.knowledge:
+                if a.cells > b.cells:
+                    cell_tmp = a.cells - b.cells
+                    count_tmp = a.count - b.count
+                    print(cell_tmp)
+                    if len(cell_tmp) == count_tmp:
+                        print(1)
+                        for cell in cell_tmp:
+
+                            self.mark_mine(cell)
+                    elif count_tmp == 0 and len(cell_tmp)>0:
+                        for cell in cell_tmp:
+                            self.mark_safe(cell)
+                    else:
+                        s = Sentence(cell_tmp, count_tmp)
+                        if s not in self.knowledge:
+                            self.knowledge.append(s)
 
     def make_safe_move(self):
         """
