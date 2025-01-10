@@ -201,13 +201,14 @@ class MinesweeperAI():
         cells = set()
         for m in {-1, 0, 1}:
             for n in {-1, 0, 1}:
-                if not(m == 0 and n==0):
-                    cells.add((i+m,j+n))
-        def maybe(i,board):
+                if not (m == 0 and n == 0):
+                    cells.add((i+m, j+n))
+                    
+        def maybe(i, board):
             if (i <= board-1) and (i >= 0):  
                 return True
         cells = {cell for cell in cells 
-                 if maybe(cell[0], self.height) and maybe(cell[1],self.width)}
+                 if maybe(cell[0], self.height) and maybe(cell[1], self.width)}
         sen = Sentence(cells, count)
         
         # get the admitted mine and safe
@@ -219,7 +220,6 @@ class MinesweeperAI():
             self.mines.add(mine)
         for safe in safes:
             self.safes.add(safe)
-            
             
         # ignores known safes when adding new sentence
         for mine in self.mines:
@@ -236,7 +236,7 @@ class MinesweeperAI():
             if len(cell_tmp) == count_tmp:
                 for cell in cell_tmp.copy():
                     self.mark_mine(cell)
-            elif count_tmp == 0 and len(cell_tmp)>0:
+            elif count_tmp == 0 and len(cell_tmp) > 0:
                 for cell in cell_tmp.copy():
                     self.mark_safe(cell)
                 
@@ -252,7 +252,7 @@ class MinesweeperAI():
                         for cell in cell_tmp:
 
                             self.mark_mine(cell)
-                    elif count_tmp == 0 and len(cell_tmp)>0:
+                    elif count_tmp == 0 and len(cell_tmp) > 0:
                         for cell in cell_tmp:
                             self.mark_safe(cell)
                     else:
@@ -283,7 +283,7 @@ class MinesweeperAI():
         all = set()
         for i in range(self.height):
             for j in range(self.width):
-                all.add((i,j))
+                all.add((i, j))
         if self.make_safe_move == None:
             for move in all:
                 if (move not in self.moves_made) and (move not in self.mines):
