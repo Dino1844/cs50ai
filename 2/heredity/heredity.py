@@ -139,7 +139,61 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
     """
-    raise NotImplementedError
+    p = 1
+    
+    # find father and mother
+    HighGeneration = []
+    LowGeneration = []
+    for person in people.keys():
+        if people[person]["mother"] == None and people[person]["father"] == None:
+            HighGeneration.append(people[person]["name"])
+        else:
+            LowGeneration.append(people[person]["name"])
+    # create the profile using the gene and trait data
+    profile = {}
+    for person in people.keys():
+        name = people[person]["name"]
+        profile[name] = []
+        
+        if name in one_gene:
+            profile[name].append(1)
+        elif person in two_genes:
+            profile[name].append(2)
+        else:
+            profile[name].append(0)
+        
+        if name in have_trait:
+            profile[name].append(True)
+        else:
+            profile[name].append(False)
+            
+    # calculate the probability of HighGeneration
+    for name in HighGeneration:
+        w = profile[name]  # gene = w[0], trait = w[1]
+        p_single = PROBS["gene"][w[0]] * PROBS["trait"][w[0]][w[1]]
+        p *= p_single
+    mutation = PROBS["mutation"]
+    # calculate the prob of child gene according to the parents
+    gene = [1]*3
+    gene[0] = [1-mutation, mutation]
+    gene[1] = [0.5, 0.5]   # 0.5 equals 0.5(1-mutation)+0.5*mutation
+    gene[2] = [mutation, 1-mutation]
+    # calculate the probability of LowGeneration
+    for name in LowGeneration:
+        p_single = 1
+        father_geneNum, mother_geneNum = profile[people[name]
+                                                 ["father"]][0], profile[people[name]["mother"]][0]
+        gene_num = profile[name][0]
+        if gene_num == 0:
+            p_single *= gene[father_geneNum][0] * gene[mother_geneNum][0]
+        elif gene_num == 2:
+            p_single *= gene[father_geneNum][1] * gene[mother_geneNum][1]
+        else:
+            p_single *= gene[father_geneNum][1] * gene[mother_geneNum][0] + \
+                gene[father_geneNum][0] * gene[mother_geneNum][1]
+        p *= PROBS["trait"][gene_num][profile[name][1]]
+        p *= p_single
+    return p
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
@@ -149,15 +203,35 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    raise NotImplementedError
-
+    def Gene(person):
+        if person in one_gene:
+            return 1
+        elif person in two_genes:
+            return 2
+        else:
+            return 0
+    for person in probabilities:
+        gene = Gene(person)                
+        trait = True if person in have_trait else False
+        probabilities[person]["gene"][gene] += p
+        probabilities[person]["trait"][trait] += p
+        
 
 def normalize(probabilities):
     """
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    raise NotImplementedError
+    for person in probabilities:
+        sum_gene = probabilities[person]["gene"][0] + \
+            probabilities[person]["gene"][1] + probabilities[person]["gene"][2]
+        probabilities[person]["gene"][0] /= sum_gene
+        probabilities[person]["gene"][1] /= sum_gene
+        probabilities[person]["gene"][2] /= sum_gene
+        
+        w = probabilities[person]["trait"][True] + probabilities[person]["trait"][False]
+        probabilities[person]["trait"][True] /= w
+        probabilities[person]["trait"][False] /= w
 
 
 if __name__ == "__main__":
