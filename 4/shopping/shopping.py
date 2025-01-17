@@ -3,6 +3,8 @@ import sys
 
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+import pandas as pd
+import numpy as np
 
 TEST_SIZE = 0.4
 
@@ -15,6 +17,7 @@ def main():
 
     # Load data from spreadsheet and split into train and test sets
     evidence, labels = load_data(sys.argv[1])
+    
     X_train, X_test, y_train, y_test = train_test_split(
         evidence, labels, test_size=TEST_SIZE
     )
@@ -33,33 +36,25 @@ def main():
 
 def load_data(filename):
     """
-    Load shopping data from a CSV file `filename` and convert into a list of
-    evidence lists and a list of labels. Return a tuple (evidence, labels).
+    Load shopping data from a CSV file `filename` and return a tuple (evidence, labels).
 
-    evidence should be a list of lists, where each list contains the
-    following values, in order:
-        - Administrative, an integer
-        - Administrative_Duration, a floating point number
-        - Informational, an integer
-        - Informational_Duration, a floating point number
-        - ProductRelated, an integer
-        - ProductRelated_Duration, a floating point number
-        - BounceRates, a floating point number
-        - ExitRates, a floating point number
-        - PageValues, a floating point number
-        - SpecialDay, a floating point number
-        - Month, an index from 0 (January) to 11 (December)
-        - OperatingSystems, an integer
-        - Browser, an integer
-        - Region, an integer
-        - TrafficType, an integer
-        - VisitorType, an integer 0 (not returning) or 1 (returning)
-        - Weekend, an integer 0 (if false) or 1 (if true)
-
-    labels should be the corresponding list of labels, where each label
-    is 1 if Revenue is true, and 0 otherwise.
+    evidence: A list of lists containing feature values.
+    labels: A list of integers where 1 indicates Revenue is true, and 0 otherwise.
     """
-    raise NotImplementedError
+    df = pd.read_csv(filename)
+
+    df['Month'] = df['Month'].map({
+        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3,
+        'May': 4, 'Jun': 5, 'Jul': 6, 'Aug': 7,
+        'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+    })
+    df['VisitorType'] = df['VisitorType'].map({'Returning_Visitor': 1, 'New_Visitor': 0})
+    df[['Weekend', 'Revenue']] = df[['Weekend', 'Revenue']].astype(int)
+
+    evidence = df.iloc[:, :-1].to_numpy()
+    labels = df.iloc[:, -1].to_numpy()
+
+    return evidence, labels
 
 
 def train_model(evidence, labels):
@@ -67,7 +62,10 @@ def train_model(evidence, labels):
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
+    # return the model KNN with neighbors = 1
+    KNN = KNeighborsClassifier(n_neighbors=1)
+    KNN.fit(evidence, labels)
+    return KNN
 
 
 def evaluate(labels, predictions):
@@ -85,8 +83,22 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
+    # just calculate the ans 
+    positive = 0
+    negative = 0
+    posiCorrect = 0
+    negaCorrect = 0
+    for i in range(len(labels)):
+        if labels[i] == 1:
+            positive += 1
+            if predictions[i] == 1:
+                posiCorrect += 1
+        else:
+            negative += 1
+            if predictions[i] == 0:
+                negaCorrect += 1
+    return (posiCorrect / positive, negaCorrect / negative)
 
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
+    
