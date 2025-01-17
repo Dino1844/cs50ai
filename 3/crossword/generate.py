@@ -206,8 +206,22 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        
-
+        domain = self.domains[var]
+        neighbors = self.crossword.neighbors(var)
+        num = dict()
+        for word in domain:
+            n_layer = 0
+            for unsigned in neighbors:
+                if unsigned in assignment.keys():
+                    continue
+                pair = self.crossword.overlaps[var, unsigned] 
+                for word_layer in self.domains[unsigned]:
+                    if word[pair[0]] != word_layer[pair[1]]:
+                        n_layer += 1
+            num[word] = n_layer
+        a = sorted(num, key = lambda k : num[k])
+        return a
+                
     def select_unassigned_variable(self, assignment):
         """
         Return an unassigned variable not already part of `assignment`.
@@ -216,7 +230,15 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        raise NotImplementedError
+        vars = [var for var in self.crossword.variables if var not in assignment]
+        if not vars:
+            return None
+        def remaining_values(var):
+            return len(self.domains[var])
+
+        vars.sort(key=lambda var: (remaining_values(var), -len(self.crossword.neighbors(var))))
+        return vars[0]
+            
 
     def backtrack(self, assignment):
         """
@@ -227,8 +249,29 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
-        raise NotImplementedError
-
+        # conclude the full situation
+        if self.assignment_complete(assignment):
+            return assignment
+        
+        # choose one var that give inference
+        var = self.select_unassigned_variable(assignment)
+        for word in self.domains[var]:
+            back = assignment.copy()
+            assignment[var] = word
+            if self.consistent(assignment):
+                if not(self.ac3()):
+                    assignment = back
+                result = self.backtrack(assignment)
+                if result:
+                    return result
+                assignment = back
+        return None
+                    
+                    
+                
+                
+                
+                    
 
 def main():
 
