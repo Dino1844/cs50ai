@@ -101,7 +101,9 @@ class NimAI():
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
-        raise NotImplementedError
+        if (tuple(state), action) in self.q.keys():
+            return self.q[tuple(state), action]
+        return 0
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
         """
@@ -118,7 +120,10 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        raise NotImplementedError
+        new = reward + future_rewards
+        old = old_q
+        state = tuple(state)
+        self.q[state, action] = old + self.alpha * (new - old)
 
     def best_future_reward(self, state):
         """
@@ -130,7 +135,21 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
-        raise NotImplementedError
+        actions = []
+        for i, value in enumerate(state):
+            if value >= 2:
+                actions.append((i, 2))
+                actions.append((i, 1))
+            elif value == 1:
+                actions.append((i, 1))
+        if len(actions) == 0:
+            return 0
+        q = -float("inf")
+        for action in actions:
+            new_q = self.get_q_value(state, action)
+            if new_q > q:
+                q = new_q       
+        return q
 
     def choose_action(self, state, epsilon=True):
         """
@@ -147,7 +166,37 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+        
+        actions = []
+        for i, value in enumerate(state):
+            if value >= 2:
+                actions.append((i, 2))
+                actions.append((i, 1))
+            elif value == 1:
+                actions.append((i, 1))
+                
+        l = len(actions)
+        if l == 0:
+            return 0
+        q = -float("inf")
+        take = actions[0]
+        for action in actions:
+            new_q = self.get_q_value(state, action)
+            if new_q > q:
+                q = new_q
+                take = action     
+        
+        def pro(action):
+            if action == take:
+                return 1 - self.epsilon + self.epsilon / l
+            else:
+                return self.epsilon / l 
+            
+        if epsilon:
+            prob = [pro(action) for action in actions]
+            return random.choices(actions, prob)[0]
+        else:
+            return take
 
 
 def train(n):
